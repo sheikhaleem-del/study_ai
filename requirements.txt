@@ -1,5 +1,9 @@
-flask
+flask>=3.0.0
 openai
 pillow
 jinja2
-playwright
+playwright>=1.48.0
+flask-cors>=4.0.0
+flask-jwt-extended
+werkzeug
+gunicorn>=22.0.0
