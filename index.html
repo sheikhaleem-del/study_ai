@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ICSE Visual Learning</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: linear-gradient(135deg, #eef2ff, #f8fafc);
+      margin: 0;
+      padding: 16px;
+    }
+
+    .app {
+      max-width: 900px;
+      margin: auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .header h1 {
+      margin: 0;
+      color: #1e293b;
+    }
+
+    .card {
+      background: white;
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 90px;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #cbd5f5;
+      font-size: 16px;
+      resize: none;
+    }
+
+    .classes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+      align-items: center;
+    }
+
+    .classes b {
+      margin-right: 6px;
+    }
+
+    .classes button {
+      padding: 8px 14px;
+      border-radius: 20px;
+      border: 1px solid #c7d2fe;
+      background: #eef2ff;
+      cursor: pointer;
+    }
+
+    .classes button.active {
+      background: #4f46e5;
+      color: white;
+    }
+
+    .generate {
+      margin-top: 15px;
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      border: none;
+      background: #4f46e5;
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      margin: 20px 0;
+      font-weight: bold;
+      color: #4f46e5;
+    }
+
+    .result {
+      margin-top: 25px;
+      display: none;
+      background: white;
+      border-radius: 12px;
+      padding: 15px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.05);
+    }
+
+    .image-box {
+      text-align: center;
+      margin-bottom: 15px;
+    }
+
+    .image-box img {
+		width: 100%;
+		height: auto;
+		max-height: none;
+		display: block;
+		object-fit: contain;
+	}
+
+
+    .study h2 {
+      margin-top: 0;
+    }
+
+    .study ul {
+      padding-left: 18px;
+    }
+
+    .memory {
+      background: #ecfeff;
+      border-left: 5px solid #06b6d4;
+      padding: 10px;
+      border-radius: 6px;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .actions button {
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: none;
+      background: #16a34a;
+      color: white;
+      cursor: pointer;
+      font-size: 15px;
+    }
+	
+	.study, .memory {
+		page-break-inside: avoid;
+	}
+	
+	/* Hide action buttons in PRINT and PDF */
+	@media print {
+	.actions {
+		display: none !important;
+		}
+	}
+
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <div class="header">
+      <h1>📘 ICSE Visual Learning</h1>
+      <p>Ask a question. Get visuals + exam-ready notes.</p>
+    </div>
+
+    <div class="card">
+		<div style="text-align:right; margin-bottom:10px;">
+			<button onclick="openLogin()">Login</button>
+		</div>
+
+      <textarea id="question" placeholder="Example: Explain evaporation and boiling"></textarea>
+
+      <div class="classes">
+        <b>Grade:</b>
+        <button onclick="selectClass(5,this)" >3</button>
+		<button onclick="selectClass(6,this)">4</button>
+		<button onclick="selectClass(6,this)">5</button>
+        <button onclick="selectClass(6,this)">6</button>
+        <button onclick="selectClass(7,this)">7</button>
+        <button onclick="selectClass(8,this)">8</button>
+        <button onclick="selectClass(9,this)">9</button>
+        <button onclick="selectClass(10,this)">10</button>
+      </div>
+
+      <button class="generate" onclick="generate()">Generate Study Material</button>
+    </div>
+
+    <div class="loading" id="loading">⏳ Creating visual study material...</div>
+
+    <div class="result" id="result">
+      <div class="actions">
+        <button onclick="printResult()">🖨 Print</button>
+        <button onclick="downloadPDF()">📄 Download PDF</button>
+      </div>
+
+      <div class="image-box">
+        <img id="diagram" alt="Study Diagram">
+      </div>
+
+      <div class="study">
+        <h2 id="title"></h2>
+
+        <h4>Simple Explanation</h4>
+        <ul id="explanation"></ul>
+
+        <h4>Keywords</h4>
+        <ul id="keywords"></ul>
+
+        <h4>Exam Points</h4>
+        <ul id="exam"></ul>
+
+        <div class="memory" id="memory"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- html2pdf library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <script>
+  /* ================= CONFIG ================= */
+const MAX_GUEST_USAGE = 3;
+
+/* ================= AUTH STATE ================= */
+function isLoggedIn() {
+  return !!localStorage.getItem("token");
+}
+
+/* ================= GUEST USAGE ================= */
+function getGuestCount() {
+  return Number(localStorage.getItem("guestCount") || 0);
+}
+
+function incrementGuestCount() {
+  localStorage.setItem("guestCount", getGuestCount() + 1);
+}
+
+function canGuestUse() {
+  return getGuestCount() < MAX_GUEST_USAGE;
+}
+
+/* ================= LOGIN ================= */
+function openLogin() {
+  document.getElementById("loginModal").style.display = "block";
+}
+
+async function login() {
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value.trim();
+
+  if (!email || !password) {
+    alert("Enter email and password");
+    return;
+  }
+
+  const res = await fetch("http://localhost:5000/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password })
+  });
+
+  const data = await res.json();
+
+  if (!res.ok || !data.token) {
+    alert("Invalid login credentials");
+    return;
+  }
+
+  // ✅ SAVE LOGIN STATE
+  localStorage.setItem("token", data.token);
+  localStorage.removeItem("guestCount");
+
+  alert("Login successful");
+  document.getElementById("loginModal").style.display = "none";
+}
+
+/* ================= CLASS SELECTION ================= */
+let selectedClass = 5;
+
+function selectClass(cls, btn) {
+  selectedClass = cls;
+  document.querySelectorAll(".classes button").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+}
+
+/* ================= GENERATE ================= */
+async function generate() {
+  const token = localStorage.getItem("token");
+
+  // 🔒 Guest restriction ONLY if NOT logged in
+  if (!token) {
+    if (!canGuestUse()) {
+      alert("Guest limit reached (3 questions). Please login to continue.");
+      openLogin();
+      return;
+    }
+  }
+
+  const q = document.getElementById("question").value.trim();
+  if (!q) {
+    alert("Please enter a question");
+    return;
+  }
+
+  document.getElementById("loading").style.display = "block";
+  document.getElementById("result").style.display = "none";
+
+  const res = await fetch("http://localhost:5000/generate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ question: q, grade: selectedClass })
+  });
+
+  const data = await res.json();
+
+  if (!res.ok || data.error) {
+    alert(data.error || "Something went wrong");
+    document.getElementById("loading").style.display = "none";
+    return;
+  }
+
+  // ✅ RENDER RESULT
+  document.getElementById("diagram").src = data.image_url;
+  document.getElementById("title").innerText = data.study_data.title;
+  fillList("explanation", normalize(data.study_data.simple_explanation));
+  fillList("keywords", data.study_data.keywords);
+  fillList("exam", data.study_data.exam_points);
+  document.getElementById("memory").innerText =
+    "Memory Trick: " + data.study_data.memory_trick;
+
+  document.getElementById("loading").style.display = "none";
+  document.getElementById("result").style.display = "block";
+
+  // ✅ COUNT ONLY SUCCESSFUL GUEST USE
+  if (!token) {
+    incrementGuestCount();
+  }
+
+  document.getElementById("question").value = "";
+}
+
+/* ================= HELPERS ================= */
+function normalize(data) {
+  if (Array.isArray(data)) return data;
+  return data.split(".").map(x => x.trim()).filter(Boolean);
+}
+
+function fillList(id, items) {
+  const ul = document.getElementById(id);
+  ul.innerHTML = "";
+  items.forEach(i => {
+    const li = document.createElement("li");
+    li.innerText = i;
+    ul.appendChild(li);
+  });
+}
+
+
+
+    // Print only the result section
+    function printResult() {
+      const printContents = document.getElementById("result").innerHTML;
+      const originalContents = document.body.innerHTML;
+
+      document.body.innerHTML = printContents;
+      window.print();
+      document.body.innerHTML = originalContents;
+      location.reload(); // restore event listeners
+    }
+
+    // Download PDF for result + memory
+    function downloadPDF() {
+		const element = document.getElementById("result");
+
+		// Force full height rendering
+		element.style.display = "block";
+		element.style.overflow = "visible";
+
+		const opt = {
+			margin: [10, 10, 10, 10],
+			filename: 'study-material.pdf',
+			image: { type: 'jpeg', quality: 0.98 },
+			html2canvas: {
+				scale: 2,
+				useCORS: true,
+				scrollY: 0,
+				windowHeight: element.scrollHeight
+			},
+		jsPDF: {
+			unit: 'mm',
+			format: 'a4',
+			orientation: 'portrait'
+		}
+	};
+
+  html2pdf().set(opt).from(element).save();
+}
+  </script>
+  <!-- ================= LOGIN MODAL ================= -->
+<div id="loginModal" style="
+display:none;
+position:fixed;
+inset:0;
+background:rgba(0,0,0,0.6);
+z-index:9999;
+">
+  <div style="
+  background:white;
+  max-width:360px;
+  margin:12% auto;
+  padding:20px;
+  border-radius:14px;
+  box-shadow:0 20px 40px rgba(0,0,0,0.2);
+  ">
+    <h3 style="margin-top:0;">🔐 Login</h3>
+
+    <input
+      id="loginEmail"
+      placeholder="Email"
+      style="width:100%; padding:10px; margin-bottom:10px;"
+    >
+
+    <input
+      id="loginPassword"
+      type="password"
+      placeholder="Password"
+      style="width:100%; padding:10px; margin-bottom:14px;"
+    >
+
+    <button
+      onclick="login()"
+      style="
+      width:100%;
+      padding:10px;
+      background:#4f46e5;
+      color:white;
+      border:none;
+      border-radius:8px;
+      font-size:16px;
+      cursor:pointer;
+      ">
+      Login
+    </button>
+  </div>
+</div>
+<!-- ================= END LOGIN MODAL ================= -->
+
+</body>
+</html>
