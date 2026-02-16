@@ -9,7 +9,16 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import secrets 
 
 app = Flask(__name__)
+app.static_folder = '.'  # Serve static from /app (your index.html)
 CORS(app)
+
+@app.route('/')
+def index():
+    return app.send_static_file('index.html')
+
+@app.route('/<path:filename>')
+def static_files(filename):
+    return app.send_static_file(filename)
 
 app.config["JWT_SECRET_KEY"] = secrets.token_hex(32)
 jwt = JWTManager(app)
@@ -80,3 +89,4 @@ def serve_files(filename):
 if __name__ == "__main__":
     #app.run(port=5000, debug=True)
     app.run(host="0.0.0.0", port=5000)
+
