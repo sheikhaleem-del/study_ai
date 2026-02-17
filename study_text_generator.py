@@ -1,7 +1,9 @@
+import os
 from openai import OpenAI
 import json
 
-client = OpenAI()
+# ✅ Explicitly get API key from environment
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def generate_study_json(question: str, grade: int) -> dict:
     prompt = f"""
@@ -35,14 +37,18 @@ Topic:
 {question}
 """
 
-    response = client.responses.create(
-        model="gpt-4.1-mini",
-        input=prompt
-    )
+    try:
+        response = client.responses.create(
+            model="gpt-4.1-mini",
+            input=prompt
+        )
 
-    raw = response.output_text.strip()
+        raw = response.output_text.strip()
 
-    if not raw:
-        raise ValueError("Empty JSON response")
+        if not raw:
+            raise ValueError("Empty JSON response")
 
-    return json.loads(raw)
+        return json.loads(raw)
+    except Exception as e:
+        print(f"❌ Study JSON generation failed: {str(e)}")
+        raise

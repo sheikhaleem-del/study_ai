@@ -1,6 +1,7 @@
 import os
 from openai import OpenAI
 
+# ✅ Explicitly get API key from environment
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def build_icse_visual_prompt(question: str, grade: int) -> str:
@@ -33,9 +34,12 @@ Style:
 Return ONLY the image description prompt.
 """
 
-    response = client.responses.create(
-        model="gpt-4.1-mini",
-        input=prompt
-    )
-
-    return response.output_text.strip()
+    try:
+        response = client.responses.create(
+            model="gpt-4.1-mini",
+            input=prompt
+        )
+        return response.output_text.strip()
+    except Exception as e:
+        print(f"❌ Prompt building failed: {str(e)}")
+        raise
