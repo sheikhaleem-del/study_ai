@@ -2,7 +2,7 @@ from openai import OpenAI
 import base64
 import os
 
-client = OpenAI()
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def generate_icse_infographic(image_prompt: str, output_path: str):
     result = client.images.generate(

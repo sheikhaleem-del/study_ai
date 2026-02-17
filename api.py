@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from prompt_builder import build_icse_visual_prompt
 from image_generator import generate_icse_infographic
@@ -19,6 +19,7 @@ def index():
 @app.route('/<path:filename>')
 def static_files(filename):
     return app.send_static_file(filename)
+
 
 app.config["JWT_SECRET_KEY"] = secrets.token_hex(32)
 jwt = JWTManager(app)
@@ -83,10 +84,10 @@ def generate():
 
 @app.route("/output/<path:filename>")
 def serve_files(filename):
-    return app.send_static_file(f"../output/{filename}")
+    # ✅ Correct way to serve files
+    return send_from_directory("output", filename)
 
 
 if __name__ == "__main__":
     #app.run(port=5000, debug=True)
     app.run(host="0.0.0.0", port=5000)
-

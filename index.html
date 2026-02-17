@@ -10,11 +10,15 @@
       background: linear-gradient(135deg, #eef2ff, #f8fafc);
       margin: 0;
       padding: 16px;
+	  overflow-x: hidden;  /* Prevent horizontal scroll */
+	 overflow-y: auto;    /* Allow vertical scroll */
+	 min-height: 100vh;   /* Ensure full viewport height */
     }
 
     .app {
       max-width: 900px;
       margin: auto;
+	  overflow: visible;
     }
 
     .header {
@@ -42,6 +46,7 @@
       border: 1px solid #cbd5f5;
       font-size: 16px;
       resize: none;
+	  box-sizing: border-box;
     }
 
     .classes {
@@ -96,11 +101,14 @@
       border-radius: 12px;
       padding: 15px;
       box-shadow: 0 6px 20px rgba(0,0,0,0.05);
+	  overflow: visible;
     }
 
     .image-box {
       text-align: center;
       margin-bottom: 15px;
+	  overflow: visible;
+	  width: 100%;
     }
 
     .image-box img {
@@ -109,6 +117,8 @@
 		max-height: none;
 		display: block;
 		object-fit: contain;
+		max-width: 100%;     /* Added: Respect container width */
+		margin: 0 auto;      /* Added: Center the image */
 	}
 
 
@@ -154,6 +164,10 @@
 	.actions {
 		display: none !important;
 		}
+	}
+	
+	*, *::before, *::after {
+		box-sizing: border-box;
 	}
 
   </style>
